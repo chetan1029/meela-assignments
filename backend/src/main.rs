@@ -11,7 +11,7 @@ use poem::{
     listener::TcpListener,
 };
 use sqlx::SqlitePool;
-use crate::handlers::{hello, get_form_data, save_submission};
+use crate::handlers::{hello, get_form_data, save_submission, get_submission};
 use crate::error::Error;
 
 
@@ -30,6 +30,7 @@ async fn main() -> Result<(), Error> {
     let pool = init_pool().await?;
     let app = Route::new()
         .at("/api/questions", get(get_form_data))
+        .at("/api/submission/:user_uuid", get(get_submission))
         .at("/api/submission", post(save_submission))
         .at("/api/hello/:name", get(hello))
         .at("/favicon.ico", StaticFileEndpoint::new("www/favicon.ico"))

@@ -98,3 +98,28 @@ pub async fn save_submission(
 
     Ok(Json(rec))
 }
+
+#[handler]
+pub async fn get_submission(
+    Data(pool): Data<&SqlitePool>,
+    user_uuid: poem::web::Path<String>,
+) -> Result<Json<Option<Submission>>, Error> {
+    let rec = sqlx::query_as::<_, Submission>(
+        r#"
+        SELECT 
+            id,
+            user_uuid,
+            form_data,
+            step,
+            created_at,
+            updated_at
+        FROM submissions
+        WHERE user_uuid = ?
+        "#
+    )
+    .bind(&*user_uuid)
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(Json(rec))
+}
