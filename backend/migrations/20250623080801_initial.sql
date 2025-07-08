@@ -64,3 +64,13 @@ INSERT INTO options (question_id, text) VALUES
   (4, 'Race-based Traumatic Stress (RBTS)'),
   (4, 'Transgender knowledge');
 
+-- User submissions table
+CREATE TABLE IF NOT EXISTS submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_uuid TEXT NOT NULL,
+    form_data TEXT NOT NULL,
+    step INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_uuid)
+);
