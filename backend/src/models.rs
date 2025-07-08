@@ -1,4 +1,5 @@
-use serde::{Serialize};
+use serde::{Serialize, Deserialize};
+use chrono::NaiveDateTime;
 
 #[derive(Serialize)]
 pub struct HelloResponse {
@@ -36,4 +37,21 @@ pub struct QuestionWithOptions {
     pub max_selection: Option<i64>,
     pub optional: bool,
     pub options: Vec<OptionItem>,
+}
+
+#[derive(Debug, sqlx::FromRow, Serialize)]
+pub struct Submission {
+    pub id: i64,
+    pub user_uuid: String,
+    pub form_data: serde_json::Value,
+    pub step: i64,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SubmissionInput {
+    pub user_uuid: String,
+    pub form_data: serde_json::Value,
+    pub step: i64,
 }

@@ -1,7 +1,7 @@
 use poem::{handler, web::Data, web::Json};
 use sqlx::SqlitePool;
 use poem::web::{Path};
-use crate::{models::{HelloResponse, QuestionWithOptions, Question, OptionItem}};
+use crate::{models::{HelloResponse, QuestionWithOptions, Question, OptionItem, SubmissionInput, Submission}};
 use crate::error::Error;
 
 
@@ -72,4 +72,29 @@ pub async fn get_form_data(
     let mut questions: Vec<_> = questions_map.into_values().collect();
     questions.sort_by_key(|q| q.step);
     Ok(Json(questions))
+}
+
+#[handler]
+pub async fn save_submission(
+    Data(pool): Data<&SqlitePool>,
+    Json(input): Json<SubmissionInput>,
+) -> Result<Json<Submission>, Error> {
+    let rec = sqlx::query_as::<_, Submission>(
+        r#"
+        INSERT INTO submissions (user_uuid, form_data, step)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_uuid) DO UPDATE SET
+            form_data = excluded.form_data,
+            step = excluded.step,
+            updated_at = CURRENT_TIMESTAMP
+        RETURNING id, user_uuid, form_data, step, created_at, updated_at
+        "#
+    )
+    .bind(&input.user_uuid)
+    .bind(&input.form_data.to_string())
+    .bind(input.step)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(Json(rec))
 }
