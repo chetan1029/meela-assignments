@@ -1,3 +1,5 @@
+mod handlers;
+mod models;
 use std::env;
 
 use log::info;
@@ -5,13 +7,12 @@ use poem::{
     EndpointExt, Route, Server,
     endpoint::{StaticFileEndpoint, StaticFilesEndpoint},
     error::ResponseError,
-    get, handler,
+    get,
     http::StatusCode,
     listener::TcpListener,
-    web::{Data, Json, Path},
 };
-use serde::Serialize;
 use sqlx::SqlitePool;
+use crate::handlers::{hello};
 
 #[derive(Debug, thiserror::Error)]
 enum Error {
@@ -38,25 +39,6 @@ async fn init_pool() -> Result<SqlitePool, Error> {
     Ok(pool)
 }
 
-#[derive(Serialize)]
-struct HelloResponse {
-    hello: String,
-}
-
-#[handler]
-async fn hello(
-    Data(pool): Data<&SqlitePool>,
-    Path(name): Path<String>,
-) -> Result<Json<HelloResponse>, Error> {
-    let r = sqlx::query!("select concat('Hello ', $1) as hello", name)
-        .fetch_one(pool)
-        .await?;
-    let Some(hello) = r.hello else {
-        Err(Error::QueryFailed)?
-    };
-
-    Ok(Json(HelloResponse { hello }))
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
