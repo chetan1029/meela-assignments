@@ -1,38 +1,19 @@
 mod handlers;
 mod models;
-use std::env;
+mod error;
 
+use std::env;
 use log::info;
 use poem::{
     EndpointExt, Route, Server,
     endpoint::{StaticFileEndpoint, StaticFilesEndpoint},
-    error::ResponseError,
     get,
-    http::StatusCode,
     listener::TcpListener,
 };
 use sqlx::SqlitePool;
 use crate::handlers::{hello};
+use crate::error::Error;
 
-#[derive(Debug, thiserror::Error)]
-enum Error {
-    #[error(transparent)]
-    Io(#[from] std::io::Error),
-    #[error(transparent)]
-    Sqlx(#[from] sqlx::Error),
-    #[error(transparent)]
-    Var(#[from] std::env::VarError),
-    #[error(transparent)]
-    Dotenv(#[from] dotenv::Error),
-    #[error("Query failed")]
-    QueryFailed,
-}
-
-impl ResponseError for Error {
-    fn status(&self) -> StatusCode {
-        StatusCode::INTERNAL_SERVER_ERROR
-    }
-}
 
 async fn init_pool() -> Result<SqlitePool, Error> {
     let pool = SqlitePool::connect(&env::var("DATABASE_URL")?).await?;

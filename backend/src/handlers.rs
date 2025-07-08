@@ -1,7 +1,8 @@
 use poem::{handler, web::Data, web::Json};
 use sqlx::SqlitePool;
 use poem::web::{Path};
-use crate::{models::{HelloResponse}, Error};
+use crate::{models::{HelloResponse}};
+use crate::error::Error;
 
 
 #[handler]
