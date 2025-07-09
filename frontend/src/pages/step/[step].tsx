@@ -126,7 +126,7 @@ export default function StepForm() {
                 <For each={q().options}>
                   {(opt) => (
                     <button
-                      class={`block w-full px-4 py-2 rounded border ${
+                      class={`block w-full px-4 py-2 rounded border cursor-pointer hover:bg-blue-100 hover:text-black ${
                         selectedOptions()[q().id]?.includes(opt.id)
                           ? "bg-blue-500 text-white"
                           : "bg-white text-black"
@@ -140,7 +140,7 @@ export default function StepForm() {
               </div>
               <div class="mt-4 text-right">
                 <button
-                  class="px-4 py-2 bg-yellow-500 text-white rounded"
+                  class="px-4 py-2 bg-yellow-500 text-white rounded cursor-pointer"
                   onClick={handleSave}
                 >
                   Save Progress
@@ -149,7 +149,7 @@ export default function StepForm() {
               <div class="mt-3 flex justify-between items-center">
                 <Show when={step() > 1}>
                   <button
-                    class="mt-4 px-4 py-2 bg-gray-300 text-black rounded"
+                    class="mt-4 px-4 py-2 bg-gray-300 text-black rounded cursor-pointer"
                     onClick={() => navigate(`/step/${uuid()}/${step() - 1}`)}
                   >
                     Previous
@@ -157,7 +157,7 @@ export default function StepForm() {
                 </Show>
                 <Show when={step() === questions()?.length}>
                   <button
-                    class="mt-6 px-6 py-2 bg-blue-600 text-white rounded"
+                    class="mt-6 px-6 py-2 bg-blue-600 text-white rounded cursor-pointer"
                     onClick={() => navigate(`/results/${uuid()}`)}
                   >
                     Submit
@@ -165,7 +165,7 @@ export default function StepForm() {
                 </Show>
                 <Show when={step() < questions()?.length}>
                   <button
-                    class="mt-6 px-6 py-2 bg-green-600 text-white rounded"
+                    class="mt-6 px-6 py-2 bg-green-600 text-white rounded cursor-pointer"
                     onClick={handleNext}
                   >
                     Next
