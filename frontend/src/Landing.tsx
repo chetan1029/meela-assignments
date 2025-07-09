@@ -1,10 +1,21 @@
 import { useNavigate } from "@solidjs/router";
+import { createEffect } from "solid-js";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Landing() {
   const navigate = useNavigate();
 
+  createEffect(() => {
+    const existing = localStorage.getItem("user_uuid");
+    if (existing) {
+      navigate(`/step/1?uuid=${existing}`);
+    }
+  });
+
   const handleStart = () => {
-    navigate(`/step/1`);
+    const uuid = uuidv4();
+    localStorage.setItem("user_uuid", uuid);
+    navigate(`/step/1?uuid=${uuid}`);
   };
 
   return (
