@@ -8,14 +8,14 @@ export default function Landing() {
   createEffect(() => {
     const existing = localStorage.getItem("user_uuid");
     if (existing) {
-      navigate(`/step/1?uuid=${existing}`);
+      navigate(`/step/${existing}/1`);
     }
   });
 
   const handleStart = () => {
     const uuid = uuidv4();
     localStorage.setItem("user_uuid", uuid);
-    navigate(`/step/1?uuid=${uuid}`);
+    navigate(`/step/${uuid}/1`);
   };
 
   return (

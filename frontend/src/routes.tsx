@@ -6,7 +6,7 @@ export default function AppRoutes() {
   return (
     <Router>
       <Route path="/" component={Landing} />
-      <Route path="/step/:step" component={StepForm} />
+      <Route path="/step/:uuid/:step" component={StepForm} />
       <Route path="*" component={() => <p>Page Not Found</p>} />
     </Router>
   );
