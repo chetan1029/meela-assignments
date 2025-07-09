@@ -1,6 +1,6 @@
 import { Navigate, Route, Router } from "@solidjs/router";
 import StepForm from "./pages/step/[step]";
-import Landing from "./Landing";
+import Landing from "./landingpage";
 import Result from "./pages/result";
 
 export default function AppRoutes() {

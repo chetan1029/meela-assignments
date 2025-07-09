@@ -8,7 +8,7 @@ export const fetchQuestions = async () => {
 
 export const fetchSubmission = async (uuid: string) => {
   const res = await fetch(`${API_BASE}/submission/${uuid}`);
-  if (!res.ok) throw new Error("Failed to fetch saved submission");
+  if (!res.ok) throw new Error("Failed to fetch submission");
   return res.json();
 };
 

@@ -1,11 +1,6 @@
 import { useParams, useNavigate } from "@solidjs/router";
-import {
-  createResource,
-  createSignal,
-  Show,
-  For,
-  createEffect,
-} from "solid-js";
+import { onMount } from "solid-js";
+import { createResource, createSignal, Show, For } from "solid-js";
 import {
   fetchQuestions,
   saveSubmission,
@@ -26,24 +21,36 @@ export default function StepForm() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [submissionError, setSubmissionError] = createSignal<string | null>(
+    null
+  );
+  const [isLoadingSubmission, setIsLoadingSubmission] = createSignal(true);
 
-  const [submission] = createResource(uuid, fetchSubmissionAndInit);
-
-  async function fetchSubmissionAndInit(id: string) {
-    const data = await fetchSubmission(id);
-
-    const mapped: Record<number, number[]> = {};
-    for (const entry of data.form_data || []) {
-      mapped[entry.question_id] = entry.selected_options;
-    }
-
-    setSelectedOptions(mapped);
-    return data;
-  }
-
-  createEffect(() => {
+  onMount(async () => {
     if (!uuid()) {
       navigate("/", { replace: true });
+      return;
+    }
+
+    try {
+      const data = await fetchSubmission(uuid());
+
+      if (data && Array.isArray(data.form_data)) {
+        const mapped: Record<number, number[]> = {};
+        for (const entry of data.form_data || []) {
+          mapped[entry.question_id] = entry.selected_options;
+        }
+        setSelectedOptions(mapped);
+
+        // Redirect to the last saved step
+        if (data.step && data.step !== step()) {
+          navigate(`/step/${uuid()}/${data.step}`, { replace: true });
+        }
+      }
+    } catch (err: any) {
+      setSubmissionError(err.message || "Failed to fetch submission");
+    } finally {
+      setIsLoadingSubmission(false);
     }
   });
 
@@ -59,16 +66,11 @@ export default function StepForm() {
           ? current.filter((id) => id !== optionId)
           : [...current, optionId]
         : [optionId];
-
       return { ...prev, [questionId]: updated };
     });
   };
 
-  const handleNext = () => {
-    const nextStep = step() + 1;
-    navigate(`/step/${uuid()}/${nextStep}`);
-  };
-
+  const handleNext = () => navigate(`/step/${uuid()}/${step() + 1}`);
   const handleSave = async () => {
     const form_data = Object.entries(selectedOptions()).map(
       ([qid, selected]) => ({
@@ -80,12 +82,10 @@ export default function StepForm() {
     try {
       await saveSubmission({ user_uuid: uuid(), form_data, step: step() });
       setMessage({ type: "success", text: "Progress saved!" });
-
-      setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       setMessage({ type: "error", text: "Save failed: " + err.message });
-
-      setTimeout(() => setMessage(null), 4000);
+    } finally {
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -103,17 +103,17 @@ export default function StepForm() {
         </div>
       </Show>
 
-      <Show when={questions.loading || submission.loading}>
+      <Show when={questions.loading || isLoadingSubmission()}>
         <p class="text-gray-500">Loading questions...</p>
       </Show>
 
-      <Show when={questions.error || submission.error}>
+      <Show when={questions.error || submissionError()}>
         <p class="text-red-600">
-          {questions.error?.message || submission.error?.message}
+          {questions.error?.message || submissionError()}
         </p>
       </Show>
 
-      <Show when={!questions.loading && !submission.loading && questions()}>
+      <Show when={!questions.loading && !isLoadingSubmission() && questions()}>
         <Show
           when={questions()?.find((q) => q.step === step())}
           fallback={<p>Step not found</p>}
@@ -126,10 +126,10 @@ export default function StepForm() {
                 <For each={q().options}>
                   {(opt) => (
                     <button
-                      class={`block w-full px-4 py-2 rounded border cursor-pointer hover:bg-blue-100 hover:text-black ${
+                      class={`block w-full px-4 py-2 rounded border cursor-pointer ${
                         selectedOptions()[q().id]?.includes(opt.id)
                           ? "bg-blue-500 text-white"
-                          : "bg-white text-black"
+                          : "bg-white text-black hover:bg-blue-100"
                       }`}
                       onClick={() => handleSelect(q().id, opt.id, q().multiple)}
                     >
@@ -138,14 +138,16 @@ export default function StepForm() {
                   )}
                 </For>
               </div>
-              <div class="mt-4 text-right">
-                <button
-                  class="px-4 py-2 bg-yellow-500 text-white rounded cursor-pointer"
-                  onClick={handleSave}
-                >
-                  Save Progress
-                </button>
-              </div>
+              <Show when={step() < questions()?.length}>
+                <div class="mt-4 text-right">
+                  <button
+                    class="px-4 py-2 bg-yellow-500 text-white rounded cursor-pointer"
+                    onClick={handleSave}
+                  >
+                    Save Progress
+                  </button>
+                </div>
+              </Show>
               <div class="mt-3 flex justify-between items-center">
                 <Show when={step() > 1}>
                   <button
@@ -158,7 +160,10 @@ export default function StepForm() {
                 <Show when={step() === questions()?.length}>
                   <button
                     class="mt-6 px-6 py-2 bg-blue-600 text-white rounded cursor-pointer"
-                    onClick={() => navigate(`/results/${uuid()}`)}
+                    onClick={async () => {
+                      await handleSave();
+                      navigate(`/results/${uuid()}`);
+                    }}
                   >
                     Submit
                   </button>
