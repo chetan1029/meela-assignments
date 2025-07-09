@@ -22,6 +22,10 @@ export default function StepForm() {
   const [selectedOptions, setSelectedOptions] = createSignal<
     Record<number, number[]>
   >({});
+  const [message, setMessage] = createSignal<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [submission] = createResource(uuid, fetchSubmissionAndInit);
 
@@ -75,14 +79,30 @@ export default function StepForm() {
 
     try {
       await saveSubmission({ user_uuid: uuid(), form_data, step: step() });
-      alert("Progress saved!");
+      setMessage({ type: "success", text: "Progress saved!" });
+
+      setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
-      alert("Save failed: " + err.message);
+      setMessage({ type: "error", text: "Save failed: " + err.message });
+
+      setTimeout(() => setMessage(null), 4000);
     }
   };
 
   return (
     <div class="p-4 max-w-lg mx-auto">
+      <Show when={message()}>
+        <div
+          class={`mb-4 px-4 py-2 rounded text-sm ${
+            message()!.type === "success"
+              ? "bg-green-100 text-green-800 border border-green-300"
+              : "bg-red-100 text-red-800 border border-red-300"
+          }`}
+        >
+          {message()!.text}
+        </div>
+      </Show>
+
       <Show when={questions.loading || submission.loading}>
         <p class="text-gray-500">Loading questions...</p>
       </Show>

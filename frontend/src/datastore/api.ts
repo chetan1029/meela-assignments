@@ -1,5 +1,3 @@
-import { Question } from "../types/question";
-
 const API_BASE = "http://0.0.0.0:3005/api";
 
 export const fetchQuestions = async () => {
